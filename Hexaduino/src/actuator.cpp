@@ -10,7 +10,6 @@ Actuator::Actuator(int servoPin)
 void Actuator::move(float angle, float offset)
 {
     Actuator::servo->writeMicroseconds(Actuator::angleToMicroseconds(angle + offset));
-    delay(15);
 };
 
 int Actuator::angleToMicroseconds(float angle)
