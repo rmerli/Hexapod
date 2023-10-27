@@ -34,27 +34,52 @@ PVector mulMatrixVector(float[][] matrix, PVector point) {
 
 
 
-//float[][] matmul(float[][] a, float[][] b) {
-//  int colsA = a[0].length;
-//  int rowsA = a.length;
-//  int colsB = b[0].length;
-//  int rowsB = b.length;
+float[][] matmul(float[][] a, float[][] b) {
+  int colsA = a[0].length;
+  int rowsA = a.length;
+  int colsB = b[0].length;
+  int rowsB = b.length;
 
-//  if (colsA != rowsB) {
-//    println("Columns of A must match rows of B");
-//    return null;
-//  }
+  if (colsA != rowsB) {
+    println("Columns of A must match rows of B");
+    return null;
+  }
 
-//  float[][] result = new float[rowsA][];
-//  for (int j = 0; j < rowsA; j++) {
-//    result[j] = new float[colsB];
-//    for (int i = 0; i < colsB; i++) {
-//      float sum = 0;
-//      for (int n = 0; n < colsA; n++) {
-//        sum += a[j][n] * b[n][i];
-//      }
-//      result[j][i] = sum;
-//    }
-//  }
-//  return result;
-//}
+  float[][] result = new float[rowsA][];
+  for (int j = 0; j < rowsA; j++) {
+    result[j] = new float[colsB];
+    for (int i = 0; i < colsB; i++) {
+      float sum = 0;
+      for (int n = 0; n < colsA; n++) {
+        sum += a[j][n] * b[n][i];
+      }
+      result[j][i] = sum;
+    }
+  }
+  return result;
+}
+
+float[][] makeRotationZMatrix(float angle) {
+  return new float[][]{                           
+                            {cos(angle), -sin(angle), 0},
+                            {sin(angle), cos(angle), 0},
+                            {0, 0 , 1}, 
+                          };
+}
+
+float[][] makeRotationYMatrix(float angle) {
+  return new float[][]{
+                          {cos(angle),0, -sin(angle)},
+                          {0, 1 , 0},  
+                          {sin(angle),0, cos(angle)},
+  
+                        };  
+}
+
+float[][] makeRotationXMatrix(float angle) {
+  return new float[][]{
+                          {1, 0 , 0},
+                          {0, cos(angle), -sin(angle)},
+                          {0, sin(angle), cos(angle)},
+                        };
+}
