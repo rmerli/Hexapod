@@ -1,19 +1,14 @@
-#include <header.h>
+#include <actuator.h>
 
 // constructor
-Actuator::Actuator(int servoPin)
+Actuator::Actuator(int servoId, int min, int max)
 {
-    Actuator::servo = new Servo();
-    Actuator::servo->attach(servoPin, Actuator::min, Actuator::max);
+    Actuator::servo = new SerialServo(&Serial2, servoId);
+    Actuator::servo->setMin(min);
+    Actuator::servo->setMax(max);
 };
 
 void Actuator::move(float angle, float offset)
 {
-    Actuator::servo->writeMicroseconds(Actuator::angleToMicroseconds(angle + offset));
-};
-
-int Actuator::angleToMicroseconds(float angle)
-{
-    float val = Actuator::min + (((Actuator::max - Actuator::min) / 180.0) * angle);
-    return (int)val;
+    Actuator::servo->write(angle + offset);
 };

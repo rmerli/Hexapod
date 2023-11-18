@@ -1,3 +1,8 @@
+#include <Arduino.h>
+#include <actuator.h>
+#include <vector.h>
+#ifndef hexapod_defined
+#define hexapod_defined
 class Leg
 {
 public:
@@ -28,7 +33,8 @@ public:
     void moveLeg(int leg, Vector3 pos);
 
 private:
-    const int right_front_coax_pin = 24;
-    const int right_front_femore_pin = 26;
-    const int right_front_tibia_pin = 28;
+    const byte right_front_coax_pin = 0x01;
+    const int right_front_femore_pin = 0x02;
+    const int right_front_tibia_pin = 0x03;
 };
+#endif

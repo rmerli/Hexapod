@@ -1,14 +1,7 @@
-#include <Arduino.h>
-#include <Servo.h>
-#include <math.h>
-#include <vector.h>
-#include <actuator.h>
-#include <hexapod.h>
-#include <helper.h>
-#include <IK.h>
+#ifndef femore_length
+#define femore_length 70.0
+#endif
 
-// Servo pins
-
-
-#define femore_length 100.0
-#define tibia_length 200.0
+#ifndef tibia_length
+#define tibia_length 250.0
+#endif
