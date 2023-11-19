@@ -1,9 +1,21 @@
 class Stance{
-  PVector[] legs = new PVector[6];
+  Leg[] legs = new Leg[6];
   Stance() {
     for (int i = 0; i < legs.length; i++) {
-      legs[i] = new PVector(150, 0, -50);
+      legs[i] = new Leg();
     }
+  }
+}
+
+class Leg{
+  PVector position = new PVector(150, 0, -50);
+  float progress;
+  boolean isLifting;
+
+  Leg() {
+    this.position = new PVector(150, 0, -50);
+    this.progress = 0.0;
+    this.isLifting = false;
   }
 }
 
@@ -81,13 +93,13 @@ class Hexapod{
   
   void update() {
     
-    PVector center = new PVector(100.0, 0.0, -25.0);
+    PVector center = new PVector(100, 0.0, -25);
     
     for (int i = 0; i < stance.legs.length; i++) {
       
-      PVector point = new PVector(this.stance.legs[i].x - center.x, this.stance.legs[i].y - center.y, this.stance.legs[i].z - center.z);
+      PVector point = new PVector(this.stance.legs[i].position.x - center.x, this.stance.legs[i].position.y - center.y, this.stance.legs[i].position.z - center.z);
       
-      float[] angles =IKleg(this.stance.legs[i].x, this.stance.legs[i].y, this.stance.legs[i].z);
+      float[] angles = IKleg(this.stance.legs[i].position.x, this.stance.legs[i].position.y, this.stance.legs[i].position.z);
       if (i == 0 || i == 3){
         point = mulMatrixVector(makeRotationZMatrix(degToRad(45)), point);
         point.x += center.x;
@@ -97,7 +109,7 @@ class Hexapod{
       }
       
       if (i == 0) {
-        println(angles[0]);
+        // println(angles[0]);
       }
       
       if (i == 2 || i == 5){

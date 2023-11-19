@@ -22,12 +22,12 @@ void renderUI() {
     .setRange(-PI,PI)
     .setValue(0);
     
-   sy = ui.addSlider("angleY").
-    setPosition(0,height-(sliderThickness * 2) - padding)
-    .setWidth(sliderLength)
-    .setHeight(sliderThickness)
-    .setRange(-PI,PI)
-    .setValue(0);
+  //  sy = ui.addSlider("angleY").
+  //   setPosition(0,height-(sliderThickness * 2) - padding)
+  //   .setWidth(sliderLength)
+  //   .setHeight(sliderThickness)
+  //   .setRange(-PI,PI)
+  //   .setValue(0);
     
   sz = ui.addSlider("angleZ").
     setPosition(0,height-(sliderThickness))
