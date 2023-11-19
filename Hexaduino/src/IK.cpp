@@ -1,4 +1,5 @@
 #include <header.h>
+#include <IK.h>
 void calculateIKLeg(Leg *leg, Vector3 pos)
 {
   float x = pos.x;

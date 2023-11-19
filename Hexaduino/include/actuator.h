@@ -1,14 +1,17 @@
+#include <serial_servo.h>
+
+#ifndef actuator_defined
+#define actuator_defined
 class Actuator
 {
 public:
-    int min = 400;
-    int max = 2350;
+    int min = 96;
+    int max = 4000;
 
-    Actuator(int servoPin);
-    Actuator();
-    int angleToMicroseconds(float angle);
+    Actuator(int servoId, int min, int max);
     void move(float angle, float offset);
 
 private:
-    Servo *servo;
+    SerialServo *servo;
 };
+#endif

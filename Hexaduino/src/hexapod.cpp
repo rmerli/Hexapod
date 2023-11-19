@@ -1,5 +1,5 @@
-#include <header.h>
-
+#include <hexapod.h>
+#include <IK.h>
 // constructor
 Leg::Leg(float coaxAngle, float femoreAngle, float tibiaAngle)
 {
@@ -17,22 +17,16 @@ Leg::Leg()
 
 void Leg::initActuators(int coaxPin, int femorePin, int tibiaPin)
 {
-    Leg::coaxJoint = new Actuator(coaxPin);
-    Leg::femoreJoint = new Actuator(femorePin);
-    Leg::tibiaJoint = new Actuator(tibiaPin);
+    Leg::coaxJoint = new Actuator(coaxPin, 1050, 2850);
+    Leg::femoreJoint = new Actuator(femorePin, 1000, 3500);
+    Leg::tibiaJoint = new Actuator(tibiaPin, 1000, 3500);
 }
 
 void Leg::move()
 {
-    Leg::isMoving = true;
     Leg::coaxJoint->move(Leg::coaxAngle, 90);
     Leg::femoreJoint->move(Leg::femoreAngle, 100);
     Leg::tibiaJoint->move(Leg::tibiaAngle, 60);
-    Leg::isMoving = false;
-
-    // Leg::coaxJoint->move(0, 90);
-    // Leg::femoreJoint->move(0, 100);
-    // Leg::tibiaJoint->move(0, 60);
 }
 
 Hexapod::Hexapod()
