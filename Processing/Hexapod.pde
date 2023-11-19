@@ -61,6 +61,14 @@ class Hexapod{
   }
   
   void setLegPositionByAngle(int leg, float j1, float j2, float j3) {
+    if (leg == 0 || leg == 3) {
+      j1 -= 45;
+    }
+    
+    if (leg == 2 || leg == 5) {
+      j1 += 45;
+    }
+    
     if (leg > 2){
       j1 = 360 - j1;
       j2 = 180 - j2;
@@ -72,9 +80,37 @@ class Hexapod{
   }
   
   void update() {
+    
+    PVector center = new PVector(100.0, 0.0, -25.0);
+    
     for (int i = 0; i < stance.legs.length; i++) {
+      
+      PVector point = new PVector(this.stance.legs[i].x - center.x, this.stance.legs[i].y - center.y, this.stance.legs[i].z - center.z);
+      
       float[] angles =IKleg(this.stance.legs[i].x, this.stance.legs[i].y, this.stance.legs[i].z);
+      if (i == 0 || i == 3){
+        point = mulMatrixVector(makeRotationZMatrix(degToRad(45)), point);
+        point.x += center.x;
+        point.y += center.y;
+        point.z += center.z;
+        angles = IKleg(point.x, point.y, point.z);
+      }
+      
+      if (i == 0) {
+        println(angles[0]);
+      }
+      
+      if (i == 2 || i == 5){
+         point = mulMatrixVector(makeRotationZMatrix(degToRad(-45)), point);
+        point.x += center.x;
+        point.y += center.y;
+        point.z += center.z;
+        angles = IKleg(point.x, point.y, point.z);
+      }
+      
+      
       this.setLegPositionByAngle(i,angles[0], angles[1], angles[2]);
+      //this.setLegPositionByAngle(i,0,0,0);
     }
   }
 }

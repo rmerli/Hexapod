@@ -1,13 +1,13 @@
 
 Hexapod hexa;
 
-PVector standPos = new PVector(150.0, 0, -50);
+PVector standPos = new PVector(100.0, 0, -50);
 
-PVector startPos = new PVector(150.0, 25.0, -50.0);
+PVector startPos = new PVector(100.0, 25.0, -50.0);
 
 
-PVector midPos = new PVector(150.0, 0.0, -25.0);
-PVector target = new PVector(150.0, -25.0, -50.0);
+PVector midPos = new PVector(100.0, 0.0, -25.0);
+PVector target = new PVector(100.0, -25.0, -50.0);
 
 
 PVector[] lifting = {startPos, midPos, target};

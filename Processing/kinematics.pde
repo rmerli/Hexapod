@@ -24,7 +24,7 @@ PVector[] forwardKinematicsLeg(float j1, float j2, float  j3, PVector offset) {
   
   PVector femore = new PVector();
   PVector tibia = new PVector();
-  
+ 
   femore.x = (cos(j1) * d4);
   femore.y = (sin(j1) * d4); 
   femore.z = d3;
@@ -45,7 +45,8 @@ float[] IKleg(float x, float y, float z) {
   float femore_length = hexa.femore_l * hexa.divider;
   float tibia_length = hexa.tibia_l * hexa.divider;  
   
-
+  
+  
   float r1 = sqrt(pow(x, 2) + pow(y, 2));
   float r2 = z;
   float r3 = sqrt(pow(r1, 2) + pow(r2, 2));
@@ -60,9 +61,9 @@ float[] IKleg(float x, float y, float z) {
   result[1] = (phi3 + phi1) * (180 / PI);
   result[2] = (PI - phi2) * (180 / PI);
   
-  println(result[0]);
-  println(result[1]);
-  println(result[2]);
+  //println(result[0]);
+  //println(result[1]);
+  //println(result[2]);
   
   return result;
 }
