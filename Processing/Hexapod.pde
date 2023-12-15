@@ -8,14 +8,14 @@ class Stance{
 }
 
 class Leg{
-  PVector position = new PVector(150, 0, -50);
+  PVector position = new PVector(100.0, 0, -50);  
+  PVector[] controlPoint;
+  boolean firstCycle = true;
   float progress;
-  boolean isLifting;
 
   Leg() {
-    this.position = new PVector(150, 0, -50);
+    this.position = new PVector(100.0, 0, -50);
     this.progress = 0.0;
-    this.isLifting = false;
   }
 }
 
@@ -33,13 +33,30 @@ class Hexapod{
   
   float divider = 400;
   
+  Status status = Status.STANDING;
+  Status prevStatus = Status.STANDING;
+
   float femore_l = 75/divider;
   float tibia_l = 150/divider;
   
   float body_wide = 100/divider;
   float body_long = 100/divider;
   
-  
+  Gait gait = Gait.TRI;
+
+  PVector standPos = new PVector(100.0, 0, -50);
+  PVector startPos = new PVector(100.0, 25.0, -50.0);
+  PVector midPos = new PVector(100.0, 0.0, -25.0);
+  PVector target = new PVector(100.0, -25.0, -50.0);
+
+
+  PVector[] lifting = {this.startPos, this.midPos, this.target};
+  PVector[] starting = {this.standPos, new PVector(this.standPos.x, (this.target.y - this.standPos.y)/2, this.midPos.z), this.target};
+  PVector[] startingPushing = {this.standPos, new PVector(this.standPos.x,(this.startPos.y - this.standPos.y)/2,this.standPos.z), this.startPos};
+
+  PVector[] pushing = {this.target, this.standPos, this.startPos};
+
+  float progressBreakpoint = 0.5;  
   
   Hexapod() {
     this.body[0] = new PVector(-this.body_wide/2, -(this.body_long/2), 0);
@@ -90,9 +107,104 @@ class Hexapod{
      this.legs[leg][1] = newPos[0];
      this.legs[leg][2] = newPos[1];
   }
+
+
+  public void walk() {
+    this.status = Status.WALKING;
+  }
+
+  public void stop() {
+    this.status = Status.STANDING;
+  }
+
+  private void updateStance() {
+
+  if (this.status == Status.STANDING) {
+    return;
+  }
   
-  void update() {
+    if (this.status == Status.WALKING && this.prevStatus != this.status) {
+
+      switch (this.gait) {
+        case TRI :
+          this.stance.legs[0].progress = 0;
+          this.stance.legs[1].progress = 0.5;
+          this.stance.legs[2].progress = 0;
+          this.stance.legs[3].progress = 0.5;
+          this.stance.legs[4].progress = 0;
+          this.stance.legs[5].progress = 0.5;
+
+          this.progressBreakpoint = 0.5;    
+          break;
+        case WAVE :
+          this.stance.legs[0].progress = 0;
+          this.stance.legs[1].progress = (1/6.0) * 5;
+          this.stance.legs[2].progress = (1/6.0) * 4;
+          this.stance.legs[3].progress = (1/6.0);
+          this.stance.legs[4].progress = (1/6.0) * 2;
+          this.stance.legs[5].progress = (1/6.0) * 3;
+
+          this.progressBreakpoint = 1.0/6.0; 
+          break;
+      }
+
+      for(int l = 0; l < this.stance.legs.length; l++) {
+        float t = this.stance.legs[l].progress;
+        
+        if (t >= progressBreakpoint) {
+          //pushing
+          this.stance.legs[l].controlPoint = startingPushing;
+        }else {
+          //lifting
+          this.stance.legs[l].controlPoint = starting;
+        }
+      }
+      
+      this.prevStatus = this.status;
     
+    }
+
+    for(int l = 0; l < this.stance.legs.length; l++) {
+      
+      float t = this.stance.legs[l].progress;
+
+      if (t >= progressBreakpoint) {
+        //pushing
+        
+        if (!this.stance.legs[l].firstCycle) {
+           this.stance.legs[l].controlPoint = pushing; 
+        }
+     
+        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, 3, map(t, this.progressBreakpoint, 1, 0,1));
+      
+      }else {
+        //lifting
+        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, 3, map(t,0, this.progressBreakpoint, 0,1));
+      }
+
+      if ((t < progressBreakpoint && t >= progressBreakpoint - 0.008) && (this.stance.legs[l].firstCycle)) {
+        this.stance.legs[l].controlPoint = pushing;
+        this.stance.legs[l].firstCycle = false;
+      }
+
+      this.stance.legs[l].progress += 0.008;
+    }
+  }
+  
+  private void checkProgress(){
+    for(int l=0; l < this.stance.legs.length; l++) {
+      if (this.stance.legs[l].progress > 1) {
+          this.stance.legs[l].progress = 0;
+          this.stance.legs[l].firstCycle = false;
+          this.stance.legs[l].controlPoint = lifting;
+      }
+    }
+  }
+
+  void update() {
+    this.checkProgress();
+    this.updateStance();
+
     PVector center = new PVector(100, 0.0, -25);
     
     for (int i = 0; i < stance.legs.length; i++) {
@@ -108,12 +220,8 @@ class Hexapod{
         angles = IKleg(point.x, point.y, point.z);
       }
       
-      if (i == 0) {
-        // println(angles[0]);
-      }
-      
       if (i == 2 || i == 5){
-         point = mulMatrixVector(makeRotationZMatrix(degToRad(-45)), point);
+        point = mulMatrixVector(makeRotationZMatrix(degToRad(-45)), point);
         point.x += center.x;
         point.y += center.y;
         point.z += center.z;
@@ -125,4 +233,7 @@ class Hexapod{
       //this.setLegPositionByAngle(i,0,0,0);
     }
   }
+
+  
+
 }

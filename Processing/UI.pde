@@ -45,8 +45,13 @@ void renderUI() {
     .setValue(0.96);
     
     ui.addButton("reset")
-    .setPosition(0,height-(sliderThickness * 4) - (padding * 3 ))
-;
+    .setPosition(0,height-(sliderThickness * 4) - (padding * 3 ));
+
+    ui.addButton("startWalking")
+    .setPosition(width - 100,height-(sliderThickness * 6) - (padding * 3 ));
+
+    ui.addButton("stop")
+    .setPosition(width - 100, height-(sliderThickness * 5) - (padding * 3 ));
 }
 
 void reset() {
@@ -54,4 +59,12 @@ void reset() {
   angleY = 0;
   angleZ = 1;
    distance = 1.2;
+}
+
+void startWalking() {
+  hexa.walk();
+}
+
+void stop() {
+  hexa.stop();
 }
