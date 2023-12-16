@@ -9,7 +9,7 @@ public:
     int max = 4000;
 
     Actuator(int servoId, int min, int max);
-    void move(float angle, float offset);
+    void move(float angle, float offset, int speed);
 
 private:
     SerialServo *servo;

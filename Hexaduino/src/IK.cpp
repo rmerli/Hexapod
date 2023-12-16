@@ -14,10 +14,6 @@ void calculateIKLeg(Leg *leg, Vector3 pos)
   float phi2 = acos((pow(tibia_length, 2) + pow(femore_length, 2) - pow(r3, 2)) / (2 * tibia_length * femore_length));
   float phi3 = atan(r2 / r1);
 
-  while (leg->isMoving)
-  {
-  }
-
   leg->coaxAngle = atan(y / x) * (180 / PI);
   leg->femoreAngle = (phi3 + phi1) * (180 / PI);
   leg->tibiaAngle = (PI - phi2) * (180 / PI);

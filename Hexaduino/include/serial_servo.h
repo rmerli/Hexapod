@@ -5,8 +5,7 @@ class SerialServo
 {
 public:
     SerialServo(HardwareSerial *serial, int id);
-    void write(float angle);
-    void setSpeed(int speed);
+    void write(float angle, int speed);
     void setMin(int min);
     void setMax(int max);
 

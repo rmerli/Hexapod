@@ -16,9 +16,9 @@ SerialServo::SerialServo(HardwareSerial *serial, int id)
     SerialServo::speed = 1000;
 }
 
-void SerialServo::write(float angle)
+void SerialServo::write(float angle, int speed = 1000)
 {
-    SerialServo::bus_servo_control(SerialServo::id, SerialServo::angleToCommand(angle), SerialServo::speed);
+    SerialServo::bus_servo_control(SerialServo::id, SerialServo::angleToCommand(angle), speed);
 }
 
 void SerialServo::setMin(int min)

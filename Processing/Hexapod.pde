@@ -15,6 +15,7 @@ class Leg{
 
   Leg() {
     this.position = new PVector(100.0, 0, -50);
+    this.controlPoint = new PVector[]{new PVector(100.0, 0, -50)};
     this.progress = 0.0;
   }
 }
@@ -109,22 +110,18 @@ class Hexapod{
   }
 
 
+  public void command() {
+    
+  }
+
   public void walk() {
+    if (this.status != Status.STANDING) {
+      return;
+    }
+
     this.status = Status.WALKING;
-  }
-
-  public void stop() {
-    this.status = Status.STANDING;
-  }
-
-  private void updateStance() {
-
-  if (this.status == Status.STANDING) {
-    return;
-  }
-  
-    if (this.status == Status.WALKING && this.prevStatus != this.status) {
-
+     
+     if (this.status == Status.WALKING && this.prevStatus != this.status) {
       switch (this.gait) {
         case TRI :
           this.stance.legs[0].progress = 0;
@@ -135,6 +132,7 @@ class Hexapod{
           this.stance.legs[5].progress = 0.5;
 
           this.progressBreakpoint = 0.5;    
+          println("resetting progresses");
           break;
         case WAVE :
           this.stance.legs[0].progress = 0;
@@ -149,8 +147,8 @@ class Hexapod{
       }
 
       for(int l = 0; l < this.stance.legs.length; l++) {
-        float t = this.stance.legs[l].progress;
-        
+        float t = this.stance.legs[l].progress; 
+        this.stance.legs[l].firstCycle = true;
         if (t >= progressBreakpoint) {
           //pushing
           this.stance.legs[l].controlPoint = startingPushing;
@@ -161,7 +159,38 @@ class Hexapod{
       }
       
       this.prevStatus = this.status;
-    
+    }
+  }
+
+  public void stop() {
+    if (this.status == Status.WALKING) {
+      this.status = Status.STOPPING;
+    }
+
+    // needs to stop
+    if (this.status == Status.STOPPING && this.status != this.prevStatus) {
+      for(int l = 0; l < this.stance.legs.length; l++) {
+        float t = this.stance.legs[l].progress;
+        
+        if (t >= progressBreakpoint) {
+          //on the ground, needs to go to the stand position in a line
+          this.stance.legs[l].controlPoint = new PVector[]{this.stance.legs[l].position, this.standPos};
+          this.stance.legs[l].progress = 0.5;
+        }else {
+          //on the air, needs to arc back to the stand position
+          this.stance.legs[l].controlPoint = new PVector[]{this.stance.legs[l].position, this.standPos};
+          this.stance.legs[l].progress = 0.5;
+        }
+      }
+      this.prevStatus = Status.STOPPING;
+    }
+
+
+  }
+
+  private void updateStance() {
+    if (this.status == Status.STANDING) {
+      return;
     }
 
     for(int l = 0; l < this.stance.legs.length; l++) {
@@ -171,29 +200,42 @@ class Hexapod{
       if (t >= progressBreakpoint) {
         //pushing
         
-        if (!this.stance.legs[l].firstCycle) {
+        if (!this.stance.legs[l].firstCycle && this.status != Status.STOPPING) {
            this.stance.legs[l].controlPoint = pushing; 
         }
      
-        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, 3, map(t, this.progressBreakpoint, 1, 0,1));
+        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t, this.progressBreakpoint, 1, 0,1));
       
       }else {
         //lifting
-        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, 3, map(t,0, this.progressBreakpoint, 0,1));
+        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t,0, this.progressBreakpoint, 0,1));
       }
 
       if ((t < progressBreakpoint && t >= progressBreakpoint - 0.008) && (this.stance.legs[l].firstCycle)) {
         this.stance.legs[l].controlPoint = pushing;
         this.stance.legs[l].firstCycle = false;
       }
-
-      this.stance.legs[l].progress += 0.008;
+      
+      if (this.stance.legs[l].progress < 1) {
+        this.stance.legs[l].progress += 0.008;
+      }
     }
   }
   
   private void checkProgress(){
+    if (this.status == Status.STOPPING) {
+      for(int l=0; l < this.stance.legs.length; l++) {
+        if (this.stance.legs[l].progress < 1) {
+          return;
+        }
+      }
+      this.status = Status.STANDING;
+      this.prevStatus = Status.STANDING;
+      return;
+    }
+
     for(int l=0; l < this.stance.legs.length; l++) {
-      if (this.stance.legs[l].progress > 1) {
+      if (this.stance.legs[l].progress > 1 && this.status == Status.WALKING) {
           this.stance.legs[l].progress = 0;
           this.stance.legs[l].firstCycle = false;
           this.stance.legs[l].controlPoint = lifting;
@@ -201,10 +243,9 @@ class Hexapod{
     }
   }
 
-  void update() {
-    this.checkProgress();
-    this.updateStance();
 
+  private void updateLegs()
+  {
     PVector center = new PVector(100, 0.0, -25);
     
     for (int i = 0; i < stance.legs.length; i++) {
@@ -227,13 +268,14 @@ class Hexapod{
         point.z += center.z;
         angles = IKleg(point.x, point.y, point.z);
       }
-      
-      
       this.setLegPositionByAngle(i,angles[0], angles[1], angles[2]);
       //this.setLegPositionByAngle(i,0,0,0);
     }
   }
 
-  
-
+  void update() {
+    this.checkProgress();
+    this.updateStance();
+    this.updateLegs();
+  }  
 }

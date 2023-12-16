@@ -1,6 +1,7 @@
 enum Status {
   STANDING,
-  WALKING
+  WALKING,
+  STOPPING
 }
 
 enum Gait {

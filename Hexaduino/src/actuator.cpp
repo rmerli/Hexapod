@@ -8,7 +8,7 @@ Actuator::Actuator(int servoId, int min, int max)
     Actuator::servo->setMax(max);
 };
 
-void Actuator::move(float angle, float offset)
+void Actuator::move(float angle, float offset, int speed = 1000)
 {
-    Actuator::servo->write(angle + offset);
+    Actuator::servo->write(angle + offset, speed);
 };
