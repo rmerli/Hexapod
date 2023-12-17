@@ -1,65 +1,108 @@
 #include <Arduino.h>
 #include <actuator.h>
 #include <vector.h>
+#include <helper.h>
+
+
 #ifndef hexapod_defined
 #define hexapod_defined
-class Leg
-{
-public:
-    float coaxAngle;
-    float femoreAngle;
-    float tibiaAngle;
-    bool isMoving = false;
 
-    Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
-    Leg();
+    struct IKangles
+    {
+        float coax;
+        float femore;
+        float tibia;
+    };
 
-    void initActuators(int coaxPin, int femorePin, int tibiaPin);
-    void move(int speed);
+    class Leg
+    {
+    public:
+        float coaxAngle;
+        float femoreAngle;
+        float tibiaAngle;
+        bool isMoving = false;
 
-private:
-    Actuator *coaxJoint;
-    Actuator *femoreJoint;
-    Actuator *tibiaJoint;
+        Vector3 position = {100.0, 0, -200.0};
+        Vector3 controlPoints[3];
+        bool firstCycle = true;
+        float progress;
+
+        Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
+        Leg();
+
+        void initActuators(int coaxPin, int femorePin, int tibiaPin);
+        void move(int speed);
+        void setJointsAngles(IKangles angles);
+
+    private:
+        Actuator *coaxJoint;
+        Actuator *femoreJoint;
+        Actuator *tibiaJoint;
+    };
+
+    class Hexapod
+    {
+    public:
+        Leg *legs[6];
+
+        Hexapod();
+        void update();
+        void walk();
+        void setGait(Gait gait);
+
+    private:
+
+        float speed = 0.003;
     
-};
+        Vector3 standPos = {100.0, 0, -200.0};
+        Vector3 target = {100.0, 50.0, -200.0};
+        Vector3 midPos = {100.0, 0, -150.0};
+        Vector3 startPos = {100.0, -50.0, -200.0};
+        
+        Vector3 lifting[3]{startPos, midPos, target};
+        Vector3 pushing[3]{target, standPos, startPos};
 
-class Hexapod
-{
-public:
-    Leg *legs[6];
+        Vector3 firstStepLifting[3]{standPos, {standPos.x, (target.y - standPos.y)/2, midPos.z}, target};
+        Vector3 firstStepPushing[3]{standPos, {standPos.x, (startPos.y - standPos.y)/2, standPos.z}, startPos};
 
-    Hexapod();
-    void update();
+        float progressBreakpoint = 0.5;
 
-private:
-    Vector3 standPos = {200.0, 0, -200.0};
-    Vector3 startPos = {200.0, 100.0, -200.0};
-    Vector3 target = {200.0, -100.0, -200.0};
-    
-    void moveLeg(int leg, Vector3 pos, int speed);
-    const byte right_front_coax_pin = 0x01;
-    const byte right_front_femore_pin = 0x02;
-    const byte right_front_tibia_pin = 0x03;
 
-    const byte right_middle_coax_pin = 0x0b;
-    const byte right_middle_femore_pin = 0x0c;
-    const byte right_middle_tibia_pin = 0x0d;
+        Gait gait = TRI;
+        Status status = STANDING;
+        Status prevStatus = STANDING;
 
-    const byte right_back_coax_pin = 0x15;
-    const byte right_back_femore_pin = 0x16;
-    const byte right_back_tibia_pin = 0x17;
+        void setControlPoints(Leg& leg, Vector3 controlPoints[]);
+        void initGait();
+        void initStopSequence();
+        void planLegsPath();
+        void updateLegsPosition();
+        void checkProgress();
 
-    const byte left_front_coax_pin = 0x1f;
-    const byte left_front_femore_pin = 0x20;
-    const byte left_front_tibia_pin = 0x21;
 
-    const byte left_middle_coax_pin = 0x29;
-    const byte left_middle_femore_pin = 0x2a;
-    const byte left_middle_tibia_pin = 0x2b;
+        void moveLeg(int leg, Vector3 pos, int speed);
+        const byte right_front_coax_pin = 0x01;
+        const byte right_front_femore_pin = 0x02;
+        const byte right_front_tibia_pin = 0x03;
 
-    const byte left_back_coax_pin = 0x33;
-    const byte left_back_femore_pin = 0x34;
-    const byte left_back_tibia_pin = 0x35;
-};
+        const byte right_middle_coax_pin = 0x0b;
+        const byte right_middle_femore_pin = 0x0c;
+        const byte right_middle_tibia_pin = 0x0d;
+
+        const byte right_back_coax_pin = 0x15;
+        const byte right_back_femore_pin = 0x16;
+        const byte right_back_tibia_pin = 0x17;
+
+        const byte left_front_coax_pin = 0x1f;
+        const byte left_front_femore_pin = 0x20;
+        const byte left_front_tibia_pin = 0x21;
+
+        const byte left_middle_coax_pin = 0x29;
+        const byte left_middle_femore_pin = 0x2a;
+        const byte left_middle_tibia_pin = 0x2b;
+
+        const byte left_back_coax_pin = 0x33;
+        const byte left_back_femore_pin = 0x34;
+        const byte left_back_tibia_pin = 0x35;
+    };
 #endif

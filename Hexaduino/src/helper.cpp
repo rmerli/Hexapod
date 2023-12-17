@@ -43,3 +43,42 @@ Vector3 GetPointOnBezierCurve(Vector3 *points, int numPoints, float t)
 
   return pos;
 }
+
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+Vector3 mulMatrixVector(float matrix[3][3], Vector3 point)
+{
+    float result[3] = {0, 0, 0};
+    float floatPoint[3] = {point.x, point.y, point.z};
+
+    for (int row = 0; row < 3; row++) {
+        for (int col = 0; col < 3; col++) {
+            result[row] += matrix[row][col] * floatPoint[col];
+        }
+    }
+
+    return Vector3(result[0], result[1], result[2]);
+}
+
+void makeRotationZMatrix(float angle, float matrix[3][3]) 
+{
+    matrix[0][0] = cos(angle);
+    matrix[0][1] = -sin(angle);
+    matrix[0][2] = 0;
+    matrix[1][0] = sin(angle);
+    matrix[1][1] = cos(angle);
+    matrix[1][2] = 0;
+    matrix[2][0] = 0;
+    matrix[2][1] = 0;
+    matrix[2][2] = 1;
+}
+
+float degToRad(float angle) {
+  return angle * (PI/180);
+}
+
+float radToDeg(float angle) {
+    return angle * (180/PI);
+}

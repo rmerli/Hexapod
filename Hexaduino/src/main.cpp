@@ -27,6 +27,7 @@ void setup()
   // controlPoints[2] = target;
   lastExec = millis();
   delay(1000);
+  hexapod->walk();
 }
 
 bool up = true;
@@ -58,7 +59,6 @@ void loop()
   // }
 
   hexapod->update();
-  delay(1000);
 
   // t += speed;
 
