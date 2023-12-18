@@ -52,12 +52,12 @@
 
     private:
 
-        float speed = 0.003;
+        float speed = 0.012;
     
-        Vector3 standPos = {100.0, 0, -200.0};
-        Vector3 target = {100.0, 50.0, -200.0};
-        Vector3 midPos = {100.0, 0, -150.0};
-        Vector3 startPos = {100.0, -50.0, -200.0};
+        Vector3 standPos = {150.0, 0, -200.0};
+        Vector3 target = {150.0, 50.0, -200.0};
+        Vector3 midPos = {150.0, 0, -125.0};
+        Vector3 startPos = {150.0, -50.0, -200.0};
         
         Vector3 lifting[3]{startPos, midPos, target};
         Vector3 pushing[3]{target, standPos, startPos};

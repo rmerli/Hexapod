@@ -171,23 +171,27 @@ void Hexapod::updateLegsPosition()
     for (int l = 0; l < 6; l++) {        
         Vector3 point = {legs[l]->position.x - center.x, legs[l]->position.y - center.y, legs[l]->position.z - center.z};
         
-        float rotationMatrix[3][3];
-        if (l == 0 || l == 3) {
-            makeRotationZMatrix(degToRad(-45), rotationMatrix);
-        }
+        if(l != 1 && l != 4){
+            float rotationMatrix[3][3];
+            if (l == 0 || l == 3) {
+                makeRotationZMatrix(degToRad(-45), rotationMatrix);
+            }
 
-        if (l == 2 || l == 5) {
-            makeRotationZMatrix(degToRad(45), rotationMatrix);
+            if (l == 2 || l == 5) {
+                makeRotationZMatrix(degToRad(45), rotationMatrix);
+            }    
+            point = mulMatrixVector(rotationMatrix, point);
         }
-
-        point = mulMatrixVector(rotationMatrix, point);
+        
         point.x += center.x;
         point.y += center.y;
         point.z += center.z;
 
-        IKangles angles =  calculateIKLeg(point);
-        legs[l]->setJointsAngles(angles);
-        legs[l]->move();
+        moveLeg(l, point, 500);
+         
+        // IKangles angles =  calculateIKLeg(point);
+        // legs[l]->setJointsAngles(angles);
+        // legs[l]->move();
     }
 }
 
@@ -230,4 +234,12 @@ void Hexapod::update()
 
 void Hexapod::moveLeg(int leg, Vector3 pos, int speed = 1000)
 {
+    IKangles angles =  calculateIKLeg(pos);
+
+    if (leg > 2) {
+        angles.coax *= -1;
+    }
+
+    legs[leg]->setJointsAngles(angles);
+    legs[leg]->move();
 }
