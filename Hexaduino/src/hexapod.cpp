@@ -71,6 +71,17 @@ void Hexapod::walk()
     initGait();
 }
 
+void Hexapod::stop()
+{
+    status = STANDING;
+    moveLeg(0,standPos,2000);
+    moveLeg(1,standPos,2000);
+    moveLeg(2,standPos,2000);
+    moveLeg(3,standPos,2000);
+    moveLeg(4,standPos,2000);
+    moveLeg(5,standPos,2000);
+}
+
 void Hexapod::setGait(Gait gait)
 {
 
@@ -82,37 +93,25 @@ void Hexapod::initGait()
         switch (gait) {
             case TRI :
                 legs[0]->progress = 0;
-                legs[1]->progress = 0.5;
+                legs[1]->progress = (cycleDuration/2) / cycleDuration;
                 legs[2]->progress = 0;
-                legs[3]->progress = 0.5;
+                legs[3]->progress = (cycleDuration/2) / cycleDuration;
                 legs[4]->progress = 0;
-                legs[5]->progress = 0.5;
+                legs[5]->progress = (cycleDuration/2) / cycleDuration;
 
-                progressBreakpoint = 0.5;    
+                progressBreakpoint = (cycleDuration/2) / cycleDuration;    
 
                 break;
             case WAVE :
                 legs[0]->progress = 0;
-                legs[1]->progress = (1/6.0) * 5;
-                legs[2]->progress = (1/6.0) * 4;
-                legs[3]->progress = (1/6.0);
-                legs[4]->progress = (1/6.0) * 2;
-                legs[5]->progress = (1/6.0) * 3;
+                legs[1]->progress = ((cycleDuration/6.0) * 5) / cycleDuration;
+                legs[2]->progress = ((cycleDuration/6.0) * 4) / cycleDuration;
+                legs[3]->progress = ((cycleDuration/6.0)) / cycleDuration;
+                legs[4]->progress = ((cycleDuration/6.0) * 2 ) / cycleDuration;
+                legs[5]->progress = ((cycleDuration/6.0) * 3 ) / cycleDuration;
 
-                progressBreakpoint = 1.0/6.0; 
+                progressBreakpoint = (cycleDuration/6.0) / cycleDuration;
                 break;
-        }
-        for(int l = 0; l < 6; l++) {
-            float t = legs[l]->progress; 
-            legs[l]->firstCycle = true;
-            
-            if (t >= progressBreakpoint) {
-                //pushing
-                setControlPoints(*legs[l], firstStepPushing);
-            }else {
-                //lifting
-                setControlPoints(*legs[l], firstStepLifting); 
-            }
         }
         Serial.println("Status walking init");
         prevStatus = status;
@@ -134,33 +133,76 @@ void Hexapod::initStopSequence()
 
 }
 
-void Hexapod::planLegsPath()
-{
+void Hexapod::planLegsPath() {
     if (status == STANDING) {
         return;
     }
 
     for (int l = 0; l < 6; l++) {
         float t = legs[l]->progress;
+        // to extract and make it a setting
+        float stride = 50;
+        float distance_from_ground = -200;
+        float lift = 75;
+
 
         if (t >= progressBreakpoint) {
-            if (!legs[l]->firstCycle && status != STOPPING) {
-                setControlPoints(*legs[l], pushing);
+            //second half of the cycle aka PUSHING
+            if (legs[l]->status != PUSHING) {
+                setStartPoint(*legs[l]);
             }
+            legs[l]->status = PUSHING;
+
+            legs[l]->controlPoints[0] = legs[l]->startPoint;
+            legs[l]->controlPoints[1] = legs[l]->startPoint;
+            legs[l]->controlPoints[2] = Vector3(legs[l]->startPoint.x, -direction * stride, distance_from_ground);
+
             legs[l]->position = GetPointOnBezierCurve(legs[l]->controlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
-        }else {
+
+        }else{
+            //fist half of the cycle aka LIFTING
+            if (legs[l]->status != LIFTING) {
+                setStartPoint(*legs[l]);
+            }
+
+            legs[l]->controlPoints[0] = legs[l]->startPoint;
+            legs[l]->controlPoints[1] = Vector3
+                (
+                    legs[l]->startPoint.x,
+                    ((direction * stride) - legs[l]->startPoint.y)/2,
+                    distance_from_ground + lift
+                ); 
+            legs[l]->controlPoints[2] = Vector3(legs[l]->startPoint.x, direction * stride, distance_from_ground);
+
+            legs[l]->status = LIFTING;
             legs[l]->position = GetPointOnBezierCurve(legs[l]->controlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
         }
+    }
+}
+void Hexapod::updateSpeed()
+{
+    if (carCommand.y >= 0) direction = 1;
+    else direction = -1;
 
-        if ((t < progressBreakpoint && t >= progressBreakpoint - speed) && (legs[l]->firstCycle)) {
-            //end first cycle for the leg
-            setControlPoints(*legs[l], pushing);
-            legs[l]->firstCycle = false;
+    speed = abs(carCommand.y);    
+    if( speed > maxSpeed) {
+        speed = maxSpeed;
+    }
+}
+
+void Hexapod::updateProgress()
+{ 
+    float currentProgress;
+    for (int l = 0; l < 6; l++){
+        //0.1 * 1000 = 100
+        currentProgress = legs[l]->progress * cycleDuration;
+        currentProgress += speed;
+       
+        legs[l]->progress = currentProgress / cycleDuration;
+    
+        if (legs[l]->progress > 1 && status == WALKING) {
+            legs[l]->progress = 0;
         }
-        
-        if (legs[l]->progress < 1) {
-            legs[l]->progress += speed;
-        }   
     }
 }
 
@@ -187,36 +229,9 @@ void Hexapod::updateLegsPosition()
         point.y += center.y;
         point.z += center.z;
 
-        moveLeg(l, point, 500);
-         
-        // IKangles angles =  calculateIKLeg(point);
-        // legs[l]->setJointsAngles(angles);
-        // legs[l]->move();
+        moveLeg(l, point, 1000);
     }
 }
-
-void Hexapod::checkProgress()
-{
-    if (status == STOPPING){
-        for (int l = 0; l < 6; l++) {
-            if (legs[l]->progress < 1) {
-                 return;
-            }
-        }
-        status = STANDING;
-        prevStatus = STANDING;
-        return;
-    }
-    
-    for (int l = 0; l < 6; l++){
-        if (legs[l]->progress > 1 && status == WALKING) {
-            legs[l]->progress = 0;
-            legs[l]->firstCycle = false;
-            setControlPoints(*legs[l], lifting);
-        }
-    }
-}
-
 
 void Hexapod::setControlPoints(Leg& leg, Vector3 controlPoints[])
 {
@@ -225,9 +240,14 @@ void Hexapod::setControlPoints(Leg& leg, Vector3 controlPoints[])
     }
 }
 
+void Hexapod::setStartPoint(Leg& leg) {
+    leg.startPoint = leg.position; 
+}
+
 void Hexapod::update()
 {
-    Hexapod::checkProgress();
+    Hexapod::updateSpeed();
+    Hexapod::updateProgress();
     Hexapod::planLegsPath();
     Hexapod::updateLegsPosition();
 }

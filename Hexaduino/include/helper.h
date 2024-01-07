@@ -19,4 +19,5 @@
 
     enum Gait { TRI, WAVE};
     enum Status { STANDING, STOPPING, WALKING};
+    enum LegStatus { LIFTING, PUSHING };
 #endif

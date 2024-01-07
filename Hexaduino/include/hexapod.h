@@ -23,9 +23,11 @@
         bool isMoving = false;
 
         Vector3 position = {100.0, 0, -200.0};
+        Vector3 startPoint = {150.0, -50.0, -200.0};
         Vector3 controlPoints[3];
         bool firstCycle = true;
         float progress;
+        LegStatus status; 
 
         Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
         Leg();
@@ -48,12 +50,15 @@
         Hexapod();
         void update();
         void walk();
+        void stop();
         void setGait(Gait gait);
-
+        Vector2 carCommand = {0,0};
     private:
-
-        float speed = 0.012;
-    
+        float cycleDuration = 10000;
+        float speed = 50;
+        float direction = 1;
+        float maxSpeed = 200;
+        
         Vector3 standPos = {150.0, 0, -200.0};
         Vector3 target = {150.0, 50.0, -200.0};
         Vector3 midPos = {150.0, 0, -125.0};
@@ -73,12 +78,14 @@
         Status prevStatus = STANDING;
 
         void setControlPoints(Leg& leg, Vector3 controlPoints[]);
+        void setStartPoint(Leg& leg); 
         void initGait();
         void initStopSequence();
         void planLegsPath();
         void updateLegsPosition();
         void checkProgress();
-
+        void updateProgress();
+        void updateSpeed();
 
         void moveLeg(int leg, Vector3 pos, int speed);
         const byte right_front_coax_pin = 0x01;
