@@ -25,7 +25,8 @@ void setup()
 void loop()
 {
 
-  hexapod->carCommand.y = -50;
+  hexapod->carCommand.y = 0;
+  hexapod->carCommand.x = 50;
 
   if (( millis() - started) > 5000) {
     started = millis();

@@ -9,9 +9,11 @@ class Stance{
 
 class Leg{
   PVector position = new PVector(100.0, 0, -50);  
+  PVector startPoint = new PVector(100.0, 25.0, -50.0);
   PVector[] controlPoint;
   boolean firstCycle = true;
   float progress;
+  LegStatus status;
 
   Leg() {
     this.position = new PVector(100.0, 0, -50);
@@ -36,6 +38,13 @@ class Hexapod{
   
   Status status = Status.STANDING;
   Status prevStatus = Status.STANDING;
+   
+  float cycleDuration = 10000;
+  float speed = 50;
+  float direction = 1;
+  float maxSpeed = 200;
+
+  PVector carCommand = new PVector(0,0,0);
 
   float femore_l = 75/divider;
   float tibia_l = 150/divider;
@@ -114,51 +123,92 @@ class Hexapod{
     
   }
 
-  public void walk() {
-    if (this.status != Status.STANDING) {
-      return;
+  // public void walk() {
+  //   if (this.status != Status.STANDING) {
+  //     return;
+  //   }
+  //
+  //   this.status = Status.WALKING;
+  //    
+  //    if (this.status == Status.WALKING && this.prevStatus != this.status) {
+  //     switch (this.gait) {
+  //       case TRI :
+  //         this.stance.legs[0].progress = 0;
+  //         this.stance.legs[1].progress = 0.5;
+  //         this.stance.legs[2].progress = 0;
+  //         this.stance.legs[3].progress = 0.5;
+  //         this.stance.legs[4].progress = 0;
+  //         this.stance.legs[5].progress = 0.5;
+  //
+  //         this.progressBreakpoint = 0.5;    
+  //         println("resetting progresses");
+  //         break;
+  //       case WAVE :
+  //         this.stance.legs[0].progress = 0;
+  //         this.stance.legs[1].progress = (1/6.0) * 5;
+  //         this.stance.legs[2].progress = (1/6.0) * 4;
+  //         this.stance.legs[3].progress = (1/6.0);
+  //         this.stance.legs[4].progress = (1/6.0) * 2;
+  //         this.stance.legs[5].progress = (1/6.0) * 3;
+  //
+  //         this.progressBreakpoint = 1.0/6.0; 
+  //         break;
+  //     }
+  //
+  //     for(int l = 0; l < this.stance.legs.length; l++) {
+  //       float t = this.stance.legs[l].progress; 
+  //       this.stance.legs[l].firstCycle = true;
+  //       if (t >= progressBreakpoint) {
+  //         //pushing
+  //         this.stance.legs[l].controlPoint = startingPushing;
+  //       }else {
+  //         //lifting
+  //         this.stance.legs[l].controlPoint = starting;
+  //       }
+  //     }
+  //     
+  //     this.prevStatus = this.status;
+  //   }
+  // }
+
+
+  public void walk()
+  {
+    if (this.status != Status.STANDING){
+        return;
     }
-
+    print("walking");
     this.status = Status.WALKING;
-     
-     if (this.status == Status.WALKING && this.prevStatus != this.status) {
-      switch (this.gait) {
-        case TRI :
-          this.stance.legs[0].progress = 0;
-          this.stance.legs[1].progress = 0.5;
-          this.stance.legs[2].progress = 0;
-          this.stance.legs[3].progress = 0.5;
-          this.stance.legs[4].progress = 0;
-          this.stance.legs[5].progress = 0.5;
+    this.initGait();
+  }
 
-          this.progressBreakpoint = 0.5;    
-          println("resetting progresses");
-          break;
-        case WAVE :
-          this.stance.legs[0].progress = 0;
-          this.stance.legs[1].progress = (1/6.0) * 5;
-          this.stance.legs[2].progress = (1/6.0) * 4;
-          this.stance.legs[3].progress = (1/6.0);
-          this.stance.legs[4].progress = (1/6.0) * 2;
-          this.stance.legs[5].progress = (1/6.0) * 3;
+  private void initGait()
+  {
+    if (this.status == Status.WALKING && this.prevStatus != this.status) {
+        switch (this.gait) {
+            case TRI :
+                this.stance.legs[0].progress = 0;
+                this.stance.legs[1].progress = (this.cycleDuration/2) / this.cycleDuration;
+                this.stance.legs[2].progress = 0;
+                this.stance.legs[3].progress = (this.cycleDuration/2) / this.cycleDuration;
+                this.stance.legs[4].progress = 0;
+                this.stance.legs[5].progress = (this.cycleDuration/2) / this.cycleDuration;
 
-          this.progressBreakpoint = 1.0/6.0; 
-          break;
-      }
+                this.progressBreakpoint = (this.cycleDuration/2) / this.cycleDuration;    
 
-      for(int l = 0; l < this.stance.legs.length; l++) {
-        float t = this.stance.legs[l].progress; 
-        this.stance.legs[l].firstCycle = true;
-        if (t >= progressBreakpoint) {
-          //pushing
-          this.stance.legs[l].controlPoint = startingPushing;
-        }else {
-          //lifting
-          this.stance.legs[l].controlPoint = starting;
+                break;
+            case WAVE :
+                this.stance.legs[0].progress = 0;
+                this.stance.legs[1].progress = ((this.cycleDuration/6.0) * 5) / this.cycleDuration;
+                this.stance.legs[2].progress = ((this.cycleDuration/6.0) * 4) / this.cycleDuration;
+                this.stance.legs[3].progress = ((this.cycleDuration/6.0)) / this.cycleDuration;
+                this.stance.legs[4].progress = ((this.cycleDuration/6.0) * 2 ) / this.cycleDuration;
+                this.stance.legs[5].progress = ((this.cycleDuration/6.0) * 3 ) / this.cycleDuration;
+
+                this.progressBreakpoint = (this.cycleDuration/6.0) / this.cycleDuration;
+                break;
         }
-      }
-      
-      this.prevStatus = this.status;
+        this.prevStatus = this.status;
     }
   }
 
@@ -184,67 +234,173 @@ class Hexapod{
       }
       this.prevStatus = Status.STOPPING;
     }
-
-
   }
 
-  private void updateStance() {
-    if (this.status == Status.STANDING) {
-      return;
-    }
-
-    for(int l = 0; l < this.stance.legs.length; l++) {
-      
-      float t = this.stance.legs[l].progress;
-
-      if (t >= progressBreakpoint) {
-        //pushing
-        
-        if (!this.stance.legs[l].firstCycle && this.status != Status.STOPPING) {
-           this.stance.legs[l].controlPoint = pushing; 
-        }
-     
-        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t, this.progressBreakpoint, 1, 0,1));
-      
-      }else {
-        //lifting
-        this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t,0, this.progressBreakpoint, 0,1));
-      }
-
-      if ((t < progressBreakpoint && t >= progressBreakpoint - 0.008) && (this.stance.legs[l].firstCycle)) {
-        this.stance.legs[l].controlPoint = pushing;
-        this.stance.legs[l].firstCycle = false;
-      }
-      
-      if (this.stance.legs[l].progress < 1) {
-        this.stance.legs[l].progress += 0.008;
-      }
-    }
-  }
+  // private void updateStance() {
+  //   if (this.status == Status.STANDING) {
+  //     return;
+  //   }
+  //
+  //   for(int l = 0; l < this.stance.legs.length; l++) {
+  //     
+  //     float t = this.stance.legs[l].progress;
+  //
+  //     if (t >= progressBreakpoint) {
+  //       //pushing
+  //       
+  //       if (!this.stance.legs[l].firstCycle && this.status != Status.STOPPING) {
+  //          this.stance.legs[l].controlPoint = pushing; 
+  //       }
+  //    
+  //       this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t, this.progressBreakpoint, 1, 0,1));
+  //     
+  //     }else {
+  //       //lifting
+  //       this.stance.legs[l].position = getPointOnBezierCurve(this.stance.legs[l].controlPoint, this.stance.legs[l].controlPoint.length, map(t,0, this.progressBreakpoint, 0,1));
+  //     }
+  //
+  //     if ((t < progressBreakpoint && t >= progressBreakpoint - 0.008) && (this.stance.legs[l].firstCycle)) {
+  //       this.stance.legs[l].controlPoint = pushing;
+  //       this.stance.legs[l].firstCycle = false;
+  //     }
+  //     
+  //     if (this.stance.legs[l].progress < 1) {
+  //       this.stance.legs[l].progress += 0.008;
+  //     }
+  //   }
+  // }
   
-  private void checkProgress(){
-    if (this.status == Status.STOPPING) {
-      for(int l=0; l < this.stance.legs.length; l++) {
-        if (this.stance.legs[l].progress < 1) {
-          return;
-        }
-      }
-      this.status = Status.STANDING;
-      this.prevStatus = Status.STANDING;
-      return;
-    }
+  // private void checkProgress(){
+  //   if (this.status == Status.STOPPING) {
+  //     for(int l=0; l < this.stance.legs.length; l++) {
+  //       if (this.stance.legs[l].progress < 1) {
+  //         return;
+  //       }
+  //     }
+  //     this.status = Status.STANDING;
+  //     this.prevStatus = Status.STANDING;
+  //     return;
+  //   }
+  //
+  //   for(int l=0; l < this.stance.legs.length; l++) {
+  //     if (this.stance.legs[l].progress > 1 && this.status == Status.WALKING) {
+  //         this.stance.legs[l].progress = 0;
+  //         this.stance.legs[l].firstCycle = false;
+  //         this.stance.legs[l].controlPoint = lifting;
+  //     }
+  //   }
+  // }
 
-    for(int l=0; l < this.stance.legs.length; l++) {
-      if (this.stance.legs[l].progress > 1 && this.status == Status.WALKING) {
-          this.stance.legs[l].progress = 0;
-          this.stance.legs[l].firstCycle = false;
-          this.stance.legs[l].controlPoint = lifting;
-      }
+
+  
+
+  private void updateSpeed()
+  {
+    if (this.carCommand.y >= 0) this.direction = 1;
+    else this.direction = -1;
+
+    this.speed = max(abs(carCommand.y), abs(carCommand.x));    
+    if( this.speed > this.maxSpeed) {
+        this.speed = this.maxSpeed;
     }
   }
 
+  private void updateProgress()
+  { 
+    float currentProgress;
+    for (int l = 0; l < 6; l++){
+        //0.1 * 1000 = 100
+      currentProgress = this.stance.legs[l].progress * this.cycleDuration;
+      currentProgress += this.speed;
+       
+      this.stance.legs[l].progress = currentProgress / this.cycleDuration;
+    
+      if (this.stance.legs[l].progress > 1 && this.status == Status.WALKING) {
+        this.stance.legs[l].progress = 0;
+      }
+    }
+  } 
 
-  private void updateLegs()
+  private void planLegsPath()
+  {
+    if (status == Status.STANDING) {
+        return;
+    }
+
+    for (int l = 0; l < 6; l++) {
+        float t = this.stance.legs[l].progress;
+        // to extract and make it a setting
+        float stride = 25;
+        float rotateStride = 10;
+        float distance_from_ground = -50;
+        float lift = 50;
+
+        PVector straightControlPoints[] = new PVector[3];
+        PVector steeringControlPoints[] = new PVector[3];
+        PVector straightPoint;
+        PVector steeringPoint;
+        float weightSum = abs(this.carCommand.x) + abs(this.carCommand.y);
+        /* println("sum = " + weightSum," x = " + this.carCommand.x," y = " + this.carCommand.y); */ 
+
+        if (t >= this.progressBreakpoint) {
+            //second half of the cycle aka LegStatus.PUSHING
+            if (this.stance.legs[l].status != LegStatus.PUSHING) {
+              this.stance.legs[l].startPoint = this.stance.legs[l].position;
+            }
+            this.stance.legs[l].status = LegStatus.PUSHING;
+
+            straightControlPoints[0] = this.stance.legs[l].startPoint;
+            straightControlPoints[1] = this.stance.legs[l].startPoint;
+            straightControlPoints[2] = new PVector(this.stance.legs[l].startPoint.x, -this.direction * stride, distance_from_ground);
+
+            straightPoint = getPointOnBezierCurve(straightControlPoints, 3, mapFloat(t, this.progressBreakpoint, 1, 0, 1));
+            this.stance.legs[l].position = straightPoint;
+
+            steeringControlPoints[0] = this.stance.legs[l].startPoint;
+            steeringControlPoints[1] = new PVector(this.stance.legs[l].startPoint.x + 50, 0, distance_from_ground);
+            steeringControlPoints[2] = new PVector(this.stance.legs[l].startPoint.x, rotateStride, distance_from_ground);
+
+            steeringPoint = getPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t, this.progressBreakpoint, 1, 0, 1));
+
+            this.stance.legs[l].position = (straightPoint.mult(abs(this.carCommand.y)).add(steeringPoint.mult(abs(this.carCommand.x))).div(weightSum));
+
+        }else{
+            //fist half of the cycle aka LegStatus.LIFTING
+            if (this.stance.legs[l].status != LegStatus.LIFTING) {
+              this.stance.legs[l].startPoint = this.stance.legs[l].position;
+            }
+            this.stance.legs[l].status = LegStatus.LIFTING;
+
+            straightControlPoints[0]= this.stance.legs[l].startPoint;
+            straightControlPoints[1]= new PVector
+                (
+                    this.stance.legs[l].startPoint.x,
+                    ((this.direction * stride) - this.stance.legs[l].startPoint.y)/2,
+                    distance_from_ground + lift
+                ); 
+            straightControlPoints[2] = new PVector(this.stance.legs[l].startPoint.x, direction * stride, distance_from_ground);
+
+            straightPoint = getPointOnBezierCurve(straightControlPoints, 3, mapFloat(t,0,this.progressBreakpoint, 0, 1));
+            this.stance.legs[l].position = straightPoint;
+
+            steeringControlPoints[0]= this.stance.legs[l].startPoint;
+            steeringControlPoints[1]= new PVector
+                (
+                    this.stance.legs[l].startPoint.x + 50,
+                    0,
+                    distance_from_ground + lift
+                ); 
+            steeringControlPoints[2] = new PVector(this.stance.legs[l].startPoint.x, -rotateStride, distance_from_ground);
+
+            steeringPoint = getPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t,0,this.progressBreakpoint, 0, 1));
+            /* println(steeringPoint, t) */;
+
+            this.stance.legs[l].position = (straightPoint.mult(abs(this.carCommand.y)).add(steeringPoint.mult(abs(this.carCommand.x))).div(weightSum));
+        }
+    }
+  }
+
+  private void updateLegsPosition()
   {
     PVector center = new PVector(100, 0.0, -25);
     
@@ -273,9 +429,13 @@ class Hexapod{
     }
   }
 
-  void update() {
-    this.checkProgress();
-    this.updateStance();
-    this.updateLegs();
+  public void update() {
+    this.updateSpeed();
+    this.updateProgress();
+    this.planLegsPath();
+    this.updateLegsPosition();
+    // this.checkProgress();
+    // this.updateStance();
+    // this.updateLegs();
   }  
 }

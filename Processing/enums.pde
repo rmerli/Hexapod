@@ -4,6 +4,11 @@ enum Status {
   STOPPING
 }
 
+enum LegStatus {
+  PUSHING,
+  LIFTING
+}
+
 enum Gait {
   TRI,
   WAVE

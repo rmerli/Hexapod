@@ -133,7 +133,8 @@ void Hexapod::initStopSequence()
 
 }
 
-void Hexapod::planLegsPath() {
+void Hexapod::planLegsPath() 
+{
     if (status == STANDING) {
         return;
     }
@@ -141,10 +142,16 @@ void Hexapod::planLegsPath() {
     for (int l = 0; l < 6; l++) {
         float t = legs[l]->progress;
         // to extract and make it a setting
-        float stride = 50;
+        float stride = -50;
         float distance_from_ground = -200;
         float lift = 75;
 
+        Vector3 straightControlPoints[3];
+        Vector3 steeringControlPoints[3];
+        Vector3 straightPoint;
+        Vector3 steeringPoint;
+        float weightSum = abs(carCommand.x) + abs(carCommand.y);
+        
 
         if (t >= progressBreakpoint) {
             //second half of the cycle aka PUSHING
@@ -153,38 +160,59 @@ void Hexapod::planLegsPath() {
             }
             legs[l]->status = PUSHING;
 
-            legs[l]->controlPoints[0] = legs[l]->startPoint;
-            legs[l]->controlPoints[1] = legs[l]->startPoint;
-            legs[l]->controlPoints[2] = Vector3(legs[l]->startPoint.x, -direction * stride, distance_from_ground);
+            straightControlPoints[0] = legs[l]->startPoint;
+            straightControlPoints[1] = legs[l]->startPoint;
+            straightControlPoints[2] = Vector3(legs[l]->startPoint.x, -direction * stride, distance_from_ground);
 
-            legs[l]->position = GetPointOnBezierCurve(legs[l]->controlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
+            straightPoint = GetPointOnBezierCurve(straightControlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
+
+            steeringControlPoints[0] = legs[l]->startPoint;
+            steeringControlPoints[1] = Vector3(legs[l]->startPoint.x + 50, 0, distance_from_ground);
+            steeringControlPoints[2] = Vector3(legs[l]->startPoint.x, stride, distance_from_ground);
+
+            steeringPoint = GetPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
+
+            legs[l]->position = (straightPoint*abs(carCommand.y) + steeringPoint*abs(carCommand.x))/ weightSum;
 
         }else{
             //fist half of the cycle aka LIFTING
             if (legs[l]->status != LIFTING) {
                 setStartPoint(*legs[l]);
             }
+            legs[l]->status = LIFTING;
 
-            legs[l]->controlPoints[0] = legs[l]->startPoint;
-            legs[l]->controlPoints[1] = Vector3
+            straightControlPoints[0]= legs[l]->startPoint;
+            straightControlPoints[1]= Vector3
                 (
                     legs[l]->startPoint.x,
                     ((direction * stride) - legs[l]->startPoint.y)/2,
                     distance_from_ground + lift
                 ); 
-            legs[l]->controlPoints[2] = Vector3(legs[l]->startPoint.x, direction * stride, distance_from_ground);
+            straightControlPoints[2] = Vector3(legs[l]->startPoint.x, direction * stride, distance_from_ground);
 
-            legs[l]->status = LIFTING;
-            legs[l]->position = GetPointOnBezierCurve(legs[l]->controlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
+            straightPoint = GetPointOnBezierCurve(straightControlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
+
+            steeringControlPoints[0]= legs[l]->startPoint;
+            steeringControlPoints[1]= Vector3
+                (
+                    legs[l]->startPoint.x + 50,
+                    0,
+                    distance_from_ground + lift
+                ); 
+            steeringControlPoints[2] = Vector3(legs[l]->startPoint.x, -stride, distance_from_ground);
+            steeringPoint = GetPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
+
+            legs[l]->position = (straightPoint*abs(carCommand.y) + steeringPoint*abs(carCommand.x))/ weightSum;
         }
     }
 }
+
 void Hexapod::updateSpeed()
 {
     if (carCommand.y >= 0) direction = 1;
     else direction = -1;
 
-    speed = abs(carCommand.y);    
+    speed = max(abs(carCommand.y), abs(carCommand.x));    
     if( speed > maxSpeed) {
         speed = maxSpeed;
     }

@@ -4,6 +4,8 @@ void setup() {
   size(1000, 1000);
   smooth();
   hexa = new Hexapod();
+  hexa.carCommand.y = -50;
+  hexa.carCommand.x = -50;
   renderUI();
 }
 
