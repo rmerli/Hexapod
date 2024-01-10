@@ -82,3 +82,9 @@ float degToRad(float angle) {
 float radToDeg(float angle) {
     return angle * (180/PI);
 }
+
+Vector3 rotatePoint(Vector3 point, float angle){
+    float rotationMatrix[3][3];
+    makeRotationZMatrix(degToRad(angle), rotationMatrix);
+    return mulMatrixVector(rotationMatrix, point);
+}

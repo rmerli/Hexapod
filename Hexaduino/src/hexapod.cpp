@@ -39,9 +39,11 @@ void Leg::move(int speed = 1000)
 
 Hexapod::Hexapod()
 {
-    for (int i = 0; i < 6; i++)
-    {
+    for (int i = 0; i < 6; i++){ 
         Hexapod::legs[i] = new Leg();
+        if (i > 2) {
+            Hexapod::legs[i]->strideMirror = -1; 
+        }
     }
 
     legs[0]->initActuators(right_front_coax_pin, right_front_femore_pin, right_front_tibia_pin);
@@ -120,17 +122,16 @@ void Hexapod::initGait()
 
 void Hexapod::initStopSequence() 
 {
-    if (status == STOPPING && status != prevStatus) {
-        for (int l = 0; l < 6; l++) {
-            legs[l]->controlPoints[0] = legs[l]->position;
-            legs[l]->controlPoints[1] = standPos;
-            legs[l]->controlPoints[2] = standPos;
-            
-            legs[l]->progress = 0.5;
-        }
-        prevStatus = STOPPING;
-    }
-
+    // if (status == STOPPING && status != prevStatus) {
+    //     for (int l = 0; l < 6; l++) {
+    //         legs[l]->controlPoints[0] = legs[l]->position;
+    //         legs[l]->controlPoints[1] = standPos;
+    //         legs[l]->controlPoints[2] = standPos;
+    //         
+    //         legs[l]->progress = 0.5;
+    //     }
+    //     prevStatus = STOPPING;
+    // }
 }
 
 void Hexapod::planLegsPath() 
@@ -142,7 +143,12 @@ void Hexapod::planLegsPath()
     for (int l = 0; l < 6; l++) {
         float t = legs[l]->progress;
         // to extract and make it a setting
-        float stride = -50;
+        float walkingStride = command.y;
+        float steeringStride = command.x;
+        
+        float kWalkingStride = 0.5;
+        float kSteeringStride = 0.5;
+
         float distance_from_ground = -200;
         float lift = 75;
 
@@ -150,7 +156,7 @@ void Hexapod::planLegsPath()
         Vector3 steeringControlPoints[3];
         Vector3 straightPoint;
         Vector3 steeringPoint;
-        float weightSum = abs(carCommand.x) + abs(carCommand.y);
+        float weightSum = abs(command.x) + abs(command.y);
         
 
         if (t >= progressBreakpoint) {
@@ -161,19 +167,17 @@ void Hexapod::planLegsPath()
             legs[l]->status = PUSHING;
 
             straightControlPoints[0] = legs[l]->startPoint;
-            straightControlPoints[1] = legs[l]->startPoint;
-            straightControlPoints[2] = Vector3(legs[l]->startPoint.x, -direction * stride, distance_from_ground);
+            straightControlPoints[1] = Vector3(standPos.x, legs[l]->strideMirror  * -walkingStride * kWalkingStride, distance_from_ground);
 
-            straightPoint = GetPointOnBezierCurve(straightControlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
+            straightPoint = GetPointOnBezierCurve(straightControlPoints, 2, mapFloat(t, progressBreakpoint, 1, 0, 1));
 
             steeringControlPoints[0] = legs[l]->startPoint;
-            steeringControlPoints[1] = Vector3(legs[l]->startPoint.x + 50, 0, distance_from_ground);
-            steeringControlPoints[2] = Vector3(legs[l]->startPoint.x, stride, distance_from_ground);
+            steeringControlPoints[1] = Vector3(standPos.x + 50, 0, distance_from_ground);
+            steeringControlPoints[2] = Vector3(standPos.x, steeringStride * kSteeringStride, distance_from_ground);
 
             steeringPoint = GetPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t, progressBreakpoint, 1, 0, 1));
 
-            legs[l]->position = (straightPoint*abs(carCommand.y) + steeringPoint*abs(carCommand.x))/ weightSum;
-
+            legs[l]->position = ((straightPoint*abs(command.y) + steeringPoint*abs(command.x))/ weightSum);
         }else{
             //fist half of the cycle aka LIFTING
             if (legs[l]->status != LIFTING) {
@@ -184,35 +188,32 @@ void Hexapod::planLegsPath()
             straightControlPoints[0]= legs[l]->startPoint;
             straightControlPoints[1]= Vector3
                 (
-                    legs[l]->startPoint.x,
-                    ((direction * stride) - legs[l]->startPoint.y)/2,
+                    standPos.x,
+                    ((legs[l]->strideMirror  * walkingStride * kWalkingStride) - legs[l]->startPoint.y)/2,
                     distance_from_ground + lift
                 ); 
-            straightControlPoints[2] = Vector3(legs[l]->startPoint.x, direction * stride, distance_from_ground);
+            straightControlPoints[2] = Vector3(standPos.x, legs[l]->strideMirror  * walkingStride * kWalkingStride, distance_from_ground);
 
             straightPoint = GetPointOnBezierCurve(straightControlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
 
             steeringControlPoints[0]= legs[l]->startPoint;
             steeringControlPoints[1]= Vector3
                 (
-                    legs[l]->startPoint.x + 50,
+                    standPos.x + 50,
                     0,
                     distance_from_ground + lift
                 ); 
-            steeringControlPoints[2] = Vector3(legs[l]->startPoint.x, -stride, distance_from_ground);
+            steeringControlPoints[2] = Vector3(standPos.x, -steeringStride * kSteeringStride, distance_from_ground);
             steeringPoint = GetPointOnBezierCurve(steeringControlPoints, 3, mapFloat(t,0, progressBreakpoint, 0, 1));
 
-            legs[l]->position = (straightPoint*abs(carCommand.y) + steeringPoint*abs(carCommand.x))/ weightSum;
+            legs[l]->position = ((straightPoint*abs(command.y) + steeringPoint*abs(command.x))/ weightSum);
         }
     }
 }
 
 void Hexapod::updateSpeed()
 {
-    if (carCommand.y >= 0) direction = 1;
-    else direction = -1;
-
-    speed = max(abs(carCommand.y), abs(carCommand.x));    
+    speed = max(abs(command.y), abs(command.x));    
     if( speed > maxSpeed) {
         speed = maxSpeed;
     }
@@ -240,31 +241,22 @@ void Hexapod::updateLegsPosition()
 
     for (int l = 0; l < 6; l++) {        
         Vector3 point = {legs[l]->position.x - center.x, legs[l]->position.y - center.y, legs[l]->position.z - center.z};
-        
+
         if(l != 1 && l != 4){
-            float rotationMatrix[3][3];
-            if (l == 0 || l == 3) {
-                makeRotationZMatrix(degToRad(-45), rotationMatrix);
+            if (l == 0 || l == 5) {
+                point = rotatePoint(point, -coaxOffset);
             }
 
-            if (l == 2 || l == 5) {
-                makeRotationZMatrix(degToRad(45), rotationMatrix);
+            if (l == 2 || l == 3) {
+                point = rotatePoint(point, coaxOffset);            
             }    
-            point = mulMatrixVector(rotationMatrix, point);
         }
-        
+
         point.x += center.x;
         point.y += center.y;
         point.z += center.z;
-
+        
         moveLeg(l, point, 1000);
-    }
-}
-
-void Hexapod::setControlPoints(Leg& leg, Vector3 controlPoints[])
-{
-    for (int i = 0; i < 3; i++){
-        leg.controlPoints[i] = controlPoints[i];
     }
 }
 
@@ -280,13 +272,19 @@ void Hexapod::update()
     Hexapod::updateLegsPosition();
 }
 
+void Hexapod::setCommand(Vector2 com) {
+    if (command.x > MAX_COMMAND) com.x = MAX_COMMAND;
+    if (command.x < -MAX_COMMAND) com.x = -MAX_COMMAND;
+    if (command.y > MAX_COMMAND) com.y = MAX_COMMAND;
+    if (command.y < -MAX_COMMAND) com.y = -MAX_COMMAND;
+
+    command.x = com.x;
+    command.y = com.y;
+}
+
 void Hexapod::moveLeg(int leg, Vector3 pos, int speed = 1000)
 {
     IKangles angles =  calculateIKLeg(pos);
-
-    if (leg > 2) {
-        angles.coax *= -1;
-    }
 
     legs[leg]->setJointsAngles(angles);
     legs[leg]->move();

@@ -16,6 +16,7 @@
     float degToRad(float angle);
 
     float radToDeg(float angle);
+    Vector3 rotatePoint(Vector3 point, float angle);
 
     enum Gait { TRI, WAVE};
     enum Status { STANDING, STOPPING, WALKING};

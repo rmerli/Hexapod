@@ -17,65 +17,51 @@
     class Leg
     {
     public:
-        float coaxAngle;
-        float femoreAngle;
-        float tibiaAngle;
-        bool isMoving = false;
-
+        Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
+        Leg();    
+        int strideMirror = 1; 
+        void move(int speed);
+        void initActuators(int coaxPin, int femorePin, int tibiaPin);
+        void setJointsAngles(IKangles angles);
         Vector3 position = {100.0, 0, -200.0};
         Vector3 startPoint = {150.0, -50.0, -200.0};
-        Vector3 controlPoints[3];
-        bool firstCycle = true;
+
         float progress;
         LegStatus status; 
-
-        Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
-        Leg();
-
-        void initActuators(int coaxPin, int femorePin, int tibiaPin);
-        void move(int speed);
-        void setJointsAngles(IKangles angles);
 
     private:
         Actuator *coaxJoint;
         Actuator *femoreJoint;
         Actuator *tibiaJoint;
-    };
+
+        float coaxAngle;
+        float femoreAngle;
+        float tibiaAngle;
+   };
 
     class Hexapod
     {
     public:
-        Leg *legs[6];
-
         Hexapod();
         void update();
         void walk();
         void stop();
         void setGait(Gait gait);
-        Vector2 carCommand = {0,0};
+        void setCommand(Vector2 command);
     private:
+        Leg *legs[6];
+
         float cycleDuration = 10000;
-        float speed = 50;
-        float direction = 1;
-        float maxSpeed = 200;
-        
-        Vector3 standPos = {150.0, 0, -200.0};
-        Vector3 target = {150.0, 50.0, -200.0};
-        Vector3 midPos = {150.0, 0, -125.0};
-        Vector3 startPos = {150.0, -50.0, -200.0};
-        
-        Vector3 lifting[3]{startPos, midPos, target};
-        Vector3 pushing[3]{target, standPos, startPos};
-
-        Vector3 firstStepLifting[3]{standPos, {standPos.x, (target.y - standPos.y)/2, midPos.z}, target};
-        Vector3 firstStepPushing[3]{standPos, {standPos.x, (startPos.y - standPos.y)/2, standPos.z}, startPos};
-
         float progressBreakpoint = 0.5;
-
-
+        float speed = 50;
+        float maxSpeed = 200;
+        const int MAX_COMMAND = 100;   
+        Vector2 command = {0,0};
+        Vector3 standPos = {150.0, 0, -200.0};
         Gait gait = TRI;
         Status status = STANDING;
         Status prevStatus = STANDING;
+        int coaxOffset = 45;
 
         void setControlPoints(Leg& leg, Vector3 controlPoints[]);
         void setStartPoint(Leg& leg); 
@@ -86,8 +72,8 @@
         void checkProgress();
         void updateProgress();
         void updateSpeed();
-
         void moveLeg(int leg, Vector3 pos, int speed);
+
         const byte right_front_coax_pin = 0x01;
         const byte right_front_femore_pin = 0x02;
         const byte right_front_tibia_pin = 0x03;
