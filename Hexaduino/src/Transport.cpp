@@ -1,5 +1,6 @@
 #include <Transport.h>
 
+
 Message decodeMessage(String rawMessage)
 {
     Message decoded;
@@ -31,3 +32,5 @@ String encodeMessage(Message msg)
 {
     return String(msg.forward) + ";" + String(msg.sideway) + ";" + String(msg.direction) + ";" + String(msg.tilt_x) + ";" + String(msg.tilt_y) + ";" + String(msg.gait);
 }
+
+

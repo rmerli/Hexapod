@@ -7,6 +7,11 @@
 #ifndef hexapod_defined
 #define hexapod_defined
 
+    struct Command {
+        int x;
+        int y;
+    };
+
     struct IKangles
     {
         float coax;
@@ -20,8 +25,10 @@
         Leg(float coaxAngle, float femoreAngle, float tibiaAngle);
         Leg();    
         int strideMirror = 1; 
+        int coaxRotated = 0; 
+        int coaxOffsetAngle = 45; 
         void move(int speed);
-        void initActuators(int coaxPin, int femorePin, int tibiaPin);
+        void initActuators(int coaxPin, int femorePin, int tibiaPin, HardwareSerial *serial);
         void setJointsAngles(IKangles angles);
         Vector3 position = {100.0, 0, -200.0};
         Vector3 startPoint = {150.0, -50.0, -200.0};
@@ -42,21 +49,21 @@
     class Hexapod
     {
     public:
-        Hexapod();
+        Hexapod(HardwareSerial *serial);
         void update();
         void walk();
         void stop();
         void setGait(Gait gait);
-        void setCommand(Vector2 command);
+        void setCommand(Command com);
     private:
         Leg *legs[6];
 
         float cycleDuration = 10000;
         float progressBreakpoint = 0.5;
         float speed = 50;
-        float maxSpeed = 200;
+        float maxSpeed = 400;
         const int MAX_COMMAND = 100;   
-        Vector2 command = {0,0};
+        Command command = {.x = 0, .y = 0};
         Vector3 standPos = {150.0, 0, -200.0};
         Gait gait = TRI;
         Status status = STANDING;

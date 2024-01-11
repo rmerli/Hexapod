@@ -1,9 +1,9 @@
 #include <actuator.h>
 
 // constructor
-Actuator::Actuator(int servoId, int min, int max)
+Actuator::Actuator(HardwareSerial *serial,int servoId, int min, int max)
 {
-    Actuator::servo = new SerialServo(&Serial2, servoId);
+    Actuator::servo = new SerialServo(serial, servoId);
     Actuator::servo->setMin(min);
     Actuator::servo->setMax(max);
 };

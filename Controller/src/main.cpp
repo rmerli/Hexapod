@@ -17,8 +17,16 @@ void setup()
 }
 
 Message decoded;
+Message msg = {
+  .forward = 0,
+  .sideway = 0,
+  .direction = 0,
+  .tilt_x = 0,
+  .tilt_y = 0,
+  .gait = 0, 
+};
 
-uint8_t buffer[20];
+uint8_t buffer[sizeof(msg)];
 
 void loop()
 {
@@ -29,7 +37,6 @@ void loop()
     Serial.println("Overflow");
   }
 
-  Message msg;
 
   if (ps5.isConnected() == true)
   {
@@ -47,7 +54,8 @@ void loop()
     }
     if (ps5.RStickY())
     {
-      // Serial.printf("Right Stick y at %d\n", ps5.RStickY());
+      // Serial.printf("Right Stick y at %d", ps5.RStickY());
+      /* Serial.print("\n"); */
     }
 
     memcpy(buffer, &msg, sizeof(msg));
@@ -59,5 +67,8 @@ void loop()
 
 void onPacketReceived(const uint8_t *buffer, size_t size)
 {
-  Serial.write(buffer, size);
+  // memcpy(&msg, buffer, size);
+  
+  // Serial.printf("%d", msg.forward);
+  // Serial.println("\n");
 }

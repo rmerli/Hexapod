@@ -8,7 +8,7 @@ public:
     int min = 96;
     int max = 4000;
 
-    Actuator(int servoId, int min, int max);
+    Actuator(HardwareSerial *serial, int servoId, int min, int max);
     void move(float angle, float offset, int speed);
 
 private:
