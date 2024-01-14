@@ -1,4 +1,4 @@
-#include <vector.h>
+#include <Vector.h>
 #ifndef helper_defined
 #define helper_defined
     float lerp(float a, float b, float f);
@@ -17,8 +17,4 @@
 
     float radToDeg(float angle);
     Vector3 rotatePoint(Vector3 point, float angle);
-
-    enum Gait { TRI, WAVE};
-    enum Status { STANDING, STOPPING, WALKING};
-    enum LegStatus { LIFTING, PUSHING };
-#endif
+    #endif

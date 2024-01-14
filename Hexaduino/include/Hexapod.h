@@ -1,8 +1,8 @@
 #include <Arduino.h>
-#include <actuator.h>
-#include <vector.h>
-#include <helper.h>
-
+#include <Actuator.h>
+#include <Vector.h>
+#include <Helper.h>
+#include <Enums.h>
 
 #ifndef hexapod_defined
 #define hexapod_defined
@@ -10,6 +10,8 @@
     struct Command {
         int x;
         int y;
+        int lastCommandAt;
+        int lastZeroCommand;
     };
 
     struct IKangles
@@ -18,6 +20,8 @@
         float femore;
         float tibia;
     };
+
+    void resetCommand(Command *com);
 
     class Leg
     {
@@ -53,7 +57,8 @@
         void update();
         void walk();
         void stop();
-        void setGait(Gait gait);
+        void setGait(int gait);
+        void setMode(int mode);
         void setCommand(Command com);
     private:
         Leg *legs[6];
@@ -61,11 +66,13 @@
         float cycleDuration = 10000;
         float progressBreakpoint = 0.5;
         float speed = 50;
+        int servoSpeed = 500;
         float maxSpeed = 400;
         const int MAX_COMMAND = 100;   
-        Command command = {.x = 0, .y = 0};
+        Command command = {.x = 0, .y = 0, .lastCommandAt = 0, .lastZeroCommand = 0};
         Vector3 standPos = {150.0, 0, -200.0};
         Gait gait = TRI;
+        Mode mode = CAR;
         Status status = STANDING;
         Status prevStatus = STANDING;
         int coaxOffset = 45;
@@ -75,6 +82,7 @@
         void initGait();
         void initStopSequence();
         void planLegsPath();
+        void planStandingMovements();
         void updateLegsPosition();
         void checkProgress();
         void updateProgress();

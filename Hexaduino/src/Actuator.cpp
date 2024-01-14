@@ -1,4 +1,4 @@
-#include <actuator.h>
+#include <Actuator.h>
 
 // constructor
 Actuator::Actuator(HardwareSerial *serial,int servoId, int min, int max)

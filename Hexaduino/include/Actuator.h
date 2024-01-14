@@ -1,4 +1,4 @@
-#include <serial_servo.h>
+#include <Serial_servo.h>
 
 #ifndef actuator_defined
 #define actuator_defined

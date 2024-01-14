@@ -1,15 +1,17 @@
 #include <Arduino.h>
- struct Message
+enum Gait {TRI, WAVE};
+enum Mode {CAR, TRANS};
+struct Message
 {
     int forward;
     int sideway;
-    int direction;
+    int distanceFromGround;
+    int translateX;
+    int translateY;
     int tilt_x;
     int tilt_y;
+    int mode; 
     int gait; 
 };
 
-
-String encodeMessage(Message msg);
-
-Message decodeMessage(String raw_msg);
+void onPacketReceived(const uint8_t *buffer, size_t size);

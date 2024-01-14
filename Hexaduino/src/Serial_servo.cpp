@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <serial_servo.h>
+#include <Serial_servo.h>
 #define RX_MAX_BUF 8
 
 uint8_t Rx_Data[8] = {0};
