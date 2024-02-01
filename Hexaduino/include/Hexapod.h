@@ -10,8 +10,8 @@
     struct Command {
         int x;
         int y;
-        int lastCommandAt;
-        int lastZeroCommand;
+        uint32_t lastCommandAt;
+        uint32_t lastZeroCommand;
     };
 
     struct IKangles

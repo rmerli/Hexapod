@@ -54,10 +54,9 @@ void loop()
     return;
   }
 
-
-  hexapod->setCommand(command);
-  // hexapod->setGait(msg.gait);
   hexapod->setMode(msg.mode);
+  hexapod->setCommand(command);
+  hexapod->setGait(msg.gait);
   hexapod->update();
 }
 
@@ -73,8 +72,8 @@ void onPacketReceived(const uint8_t *buffer, size_t size)
   memcpy(&msg, buffer, size);
   command.x = msg.sideway;
   command.y = msg.forward;
-
+  command.lastCommandAt = millis();
   // uint8_t replyBuffer[sizeof(msg)];
   // memcpy(replyBuffer, &msg, sizeof(msg));
-  packetSerial.send(buffer, sizeof(msg));
+  // packetSerial.send(buffer, sizeof(msg));
 }

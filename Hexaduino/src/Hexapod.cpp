@@ -102,12 +102,11 @@ void Hexapod::stop()
     // moveLeg(3,standPos,2000);
     // moveLeg(4,standPos,2000);
     // moveLeg(5,standPos,2000);
-    delay(100);
 }
 
 void Hexapod::setGait(int newGait)
 {
-    if (status != STANDING) return;
+    if (status != STANDING && mode != CAR) return;
     Gait g;
     switch (newGait) {
         case 0:
@@ -126,22 +125,21 @@ void Hexapod::setGait(int newGait)
 
 void Hexapod::setMode(int newMode)
 {
-    mode = TRANS;
-    // if (status != STANDING) return;
-    // Mode m;
-    // switch (newMode) {
-    //     case 0:
-    //         m = CAR;
-    //         break;
-    //     case 1:
-    //         m = TRANS;
-    //         break;
-    //     default:
-    //         m = CAR;
-    //         break;
-    // }
-    //
-    // if (m != mode) mode = m; 
+    if (status != STANDING) return;
+    Mode m;
+    switch (newMode) {
+        case 0:
+            m = CAR;
+            break;
+        case 1:
+            m = TRANS;
+            break;
+        default:
+            m = CAR;
+            break;
+    }
+
+    if (m != mode) mode = m; 
 }
 
 void Hexapod::initGait()
@@ -170,7 +168,7 @@ void Hexapod::initGait()
                 progressBreakpoint = (cycleDuration/6.0) / cycleDuration;
                 break;
         }
-        Serial.println("Status walking init");
+        // Serial.println("Status walking init");
         prevStatus = status;
     }
 }
@@ -180,17 +178,25 @@ void Hexapod::initStopSequence()
 }
 
 void Hexapod::planStandingMovements() {
-    // if (mode != TRANS) return;
-    // if (status != STANDING) {
-    //     return;
-    // }
+    if (mode != TRANS) return;
+    if (status != STANDING) {
+        return;
+    }
     // -10 <= translation >= 10
-    float xTranslation = mapFloat(command.x, -100, 100, -50, 50);
-    float yTranslation = mapFloat(command.y, -100, 100, -50, 50);
+    float xTranslation = mapFloat(command.x, -100, 100, 50, -50);
+    float yTranslation = mapFloat(command.y, -100, 100, 50, -50);
+    Vector3 newPos = {};
 
     for (int l = 0; l < 6; l++) {
-        legs[l]->position.x = (standPos.x + xTranslation);
-        legs[l]->position.y = (standPos.y + yTranslation) * legs[l]->strideMirror;
+        newPos.x = (standPos.x + (xTranslation * legs[l]->strideMirror));
+        newPos.y = (standPos.y + (yTranslation * legs[l]->strideMirror));
+        newPos.z = legs[l]->position.z;
+
+        newPos.x = (standPos.x + (xTranslation * legs[l]->strideMirror));
+        newPos.y = (standPos.y + (yTranslation * legs[l]->strideMirror));
+        newPos.rotate(legs[l]->coaxOffsetAngle * legs[l]->coaxRotated, Vector2(standPos.x, 0));
+
+        legs[l]->position = lerp(legs[l]->position, newPos, 0.15);
     }
 }
 
@@ -327,10 +333,10 @@ void Hexapod::setStartPoint(Leg& leg) {
 void Hexapod::update()
 {
     //car updates
-    // Hexapod::updateSpeed();
-    // Hexapod::updateProgress();
-    // Hexapod::planLegsPath();
-
+    Hexapod::updateSpeed();
+    Hexapod::updateProgress();
+    Hexapod::planLegsPath();
+    //
     //standing updates
     Hexapod::planStandingMovements();
 
@@ -349,6 +355,18 @@ void Hexapod::setCommand(Command com) {
 
     command.x = com.x;
     command.y = com.y;
+    command.lastCommandAt = com.lastCommandAt;
+
+    if ((command.x != 0) || (command.y != 0)) {
+        command.lastZeroCommand = millis();
+    }
+
+    if ((status == WALKING) && ((millis() - command.lastZeroCommand) > 1000)) {
+        stop();
+    }else {
+        walk();
+    }
+
 }
 
 void Hexapod::moveLeg(int leg, Vector3 pos, int speed = 1000)
