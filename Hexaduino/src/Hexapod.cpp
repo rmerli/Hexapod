@@ -104,6 +104,11 @@ void Hexapod::stop()
     // moveLeg(5,standPos,2000);
 }
 
+void Hexapod::setDistanceFromGround(int distance) {
+    int distanceFromGround = map(distance, -100, 100, Hexapod::MIN_GROUND_DISTANCE, Hexapod::MAX_GROUND_DISTANCE);
+    standPos.z = lerp(standPos.z, distanceFromGround, 0.15);
+}
+
 void Hexapod::setGait(int newGait)
 {
     if (status != STANDING && mode != CAR) return;
@@ -133,6 +138,9 @@ void Hexapod::setMode(int newMode)
             break;
         case 1:
             m = TRANS;
+            break;
+        case 2: 
+            m = TILT;
             break;
         default:
             m = CAR;
@@ -177,12 +185,43 @@ void Hexapod::initStopSequence()
 {
 }
 
-void Hexapod::planStandingMovements() {
+void Hexapod::planTiltMovements() {
+    if (mode != TILT) return;
+    if (status != STANDING) {
+        return;
+    }
+
+    // -25 <= translation >= 25
+    float xTranslation = mapFloat(command.x, -100, 100, 25, -25);
+    float yTranslation = mapFloat(command.y, -100, 100, 25, -25);
+    Vector3 newPos = {};
+
+    for (int l = 0; l < 6; l++) {
+        newPos.x = legs[l]->position.x;
+        newPos.y = legs[l]->position.y;
+        newPos.z = (standPos.z + (xTranslation * legs[l]->strideMirror));
+
+
+        if (l == 0 || l == 3 ) {
+            //front legs
+            newPos.z = (newPos.z + (yTranslation));
+        }
+
+        if (l == 2 || l == 5) {
+            // back legs
+            newPos.z = (newPos.z - (yTranslation));
+        }
+
+        legs[l]->position = lerp(legs[l]->position, newPos, 0.15);
+    }
+}
+
+void Hexapod::planTransMovements() {
     if (mode != TRANS) return;
     if (status != STANDING) {
         return;
     }
-    // -10 <= translation >= 10
+    // -50 <= translation >= 50
     float xTranslation = mapFloat(command.x, -100, 100, 50, -50);
     float yTranslation = mapFloat(command.y, -100, 100, 50, -50);
     Vector3 newPos = {};
@@ -190,15 +229,12 @@ void Hexapod::planStandingMovements() {
     for (int l = 0; l < 6; l++) {
         newPos.x = (standPos.x + (xTranslation * legs[l]->strideMirror));
         newPos.y = (standPos.y + (yTranslation * legs[l]->strideMirror));
-        newPos.z = legs[l]->position.z;
+        newPos.z = standPos.z;
 
-        newPos.x = (standPos.x + (xTranslation * legs[l]->strideMirror));
-        newPos.y = (standPos.y + (yTranslation * legs[l]->strideMirror));
         newPos.rotate(legs[l]->coaxOffsetAngle * legs[l]->coaxRotated, Vector2(standPos.x, 0));
-
         legs[l]->position = lerp(legs[l]->position, newPos, 0.15);
     }
-}
+   }
 
 void Hexapod::planLegsPath() 
 {
@@ -217,8 +253,8 @@ void Hexapod::planLegsPath()
         float kWalkingStride = 0.8;
         float kSteeringStride = 0.8;
 
-        float distance_from_ground = -220;
-        float lift = 110;
+        float distance_from_ground = standPos.z;
+        float lift = 100;
 
         Vector3 straightControlPoints[3];
         Vector3 steeringControlPoints[3];
@@ -338,7 +374,8 @@ void Hexapod::update()
     Hexapod::planLegsPath();
     //
     //standing updates
-    Hexapod::planStandingMovements();
+    Hexapod::planTransMovements();
+    Hexapod::planTiltMovements();
 
     //general updates
     Hexapod::updateLegsPosition();

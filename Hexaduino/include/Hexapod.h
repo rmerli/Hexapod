@@ -60,6 +60,7 @@
         void setGait(int gait);
         void setMode(int mode);
         void setCommand(Command com);
+        void setDistanceFromGround(int distance);
     private:
         Leg *legs[6];
 
@@ -69,8 +70,10 @@
         int servoSpeed = 500;
         float maxSpeed = 400;
         const int MAX_COMMAND = 100;   
+        const int MAX_GROUND_DISTANCE = -250;
+        const int MIN_GROUND_DISTANCE = -165;
         Command command = {.x = 0, .y = 0, .lastCommandAt = 0, .lastZeroCommand = 0};
-        Vector3 standPos = {150.0, 0, -200.0};
+        Vector3 standPos = {125.0, 0, -225.0};
         Gait gait = TRI;
         Mode mode = CAR;
         Status status = STANDING;
@@ -82,7 +85,8 @@
         void initGait();
         void initStopSequence();
         void planLegsPath();
-        void planStandingMovements();
+        void planTransMovements();
+        void planTiltMovements();
         void updateLegsPosition();
         void checkProgress();
         void updateProgress();

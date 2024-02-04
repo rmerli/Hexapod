@@ -53,7 +53,7 @@ void loop()
     command.y = 0;
     return;
   }
-
+  hexapod->setDistanceFromGround(msg.distanceFromGround);
   hexapod->setMode(msg.mode);
   hexapod->setCommand(command);
   hexapod->setGait(msg.gait);

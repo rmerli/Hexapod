@@ -83,8 +83,10 @@ void parseInputIntoMessage(ArduinoCRSF inputSerial, Message *message) {
 
   if (mode < ((CRSF_MAX - CRSF_MIN)/3) + CRSF_MIN) {
     message->mode = 0;
-  }else {
+  }else if ( (mode >= ((CRSF_MAX - CRSF_MIN)/3) + CRSF_MIN) && (mode <= (((CRSF_MAX - CRSF_MIN)/3) * 2) + CRSF_MIN) ) {
     message->mode = 1;
+  }else {
+    message->mode = 2;
   }
 
   if (forward > CRSF_MAX) {

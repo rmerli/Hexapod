@@ -1,6 +1,6 @@
 #include <Arduino.h>
 enum Gait {TRI, WAVE};
-enum Mode {CAR, TRANS};
+enum Mode {CAR, TRANS, TILT};
 struct Message
 {
     int forward;
